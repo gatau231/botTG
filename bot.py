@@ -3,6 +3,7 @@ import platform
 import uuid
 from flask import Flask, request
 from os import getenv
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -25,7 +26,8 @@ def start(message):
         "🛠️ *Cara Menggunakan:*\n"
         "1. Gunakan perintah `/generate_license` untuk membuat lisensi.\n"
         "2. Gunakan perintah `/verify_license <license_key>` untuk memverifikasi lisensi Anda.\n"
-        "3. Gunakan perintah `/device_info` untuk melihat informasi perangkat Anda.\n\n"
+        "3. Gunakan perintah `/device_info` untuk melihat informasi perangkat Anda.\n"
+        "4. Gunakan perintah `/set_expiry <license_key> <hari>` untuk mengubah tanggal kedaluwarsa lisensi (Admin saja).\n\n"
         "📞 *Informasi Kontak:*\n"
         f"Nama: Fanky\n"
         f"Email: radenmanis123@gmail.com\n"
@@ -48,17 +50,31 @@ def generate_license(message):
     if user_id in licenses:
         bot.reply_to(
             message,
-            f"Anda sudah memiliki lisensi: `{licenses[user_id]}`\nLisensi tidak dapat diubah.",
+            f"Anda sudah memiliki lisensi: `{licenses[user_id]['key']}`\n"
+            f"📅 Dibuat pada: `{licenses[user_id]['created_at']}`\n"
+            f"⏳ Kedaluwarsa: `{licenses[user_id]['expires_at']}`",
             parse_mode="Markdown"
         )
         return
 
     # Jika belum ada lisensi, buat lisensi baru
     license_key = str(uuid.uuid4())
-    licenses[user_id] = license_key
+    created_at = datetime.now()
+    expires_at = created_at + timedelta(days=30)  # Default masa aktif 30 hari
+
+    # Simpan lisensi
+    licenses[user_id] = {
+        "key": license_key,
+        "created_at": created_at.strftime("%Y-%m-%d %H:%M:%S"),
+        "expires_at": expires_at.strftime("%Y-%m-%d %H:%M:%S")
+    }
+
     bot.reply_to(
         message,
-        f"Lisensi baru berhasil dibuat untuk perangkat Anda: `{license_key}`",
+        f"Lisensi baru berhasil dibuat untuk perangkat Anda:\n"
+        f"🔑 Lisensi: `{license_key}`\n"
+        f"📅 Dibuat pada: `{licenses[user_id]['created_at']}`\n"
+        f"⏳ Kedaluwarsa: `{licenses[user_id]['expires_at']}`",
         parse_mode="Markdown"
     )
 
@@ -66,13 +82,45 @@ def generate_license(message):
 @bot.message_handler(commands=['verify_license'])
 def verify_license(message):
     user_id = message.chat.id
-    license_key = message.text.split()[-1]
+    try:
+        license_key = message.text.split()[1]
+    except IndexError:
+        bot.reply_to(message, "❌ Format salah. Gunakan format: `/verify_license <license_key>`", parse_mode="Markdown")
+        return
 
     # Validasi lisensi berdasarkan user_id
-    if licenses.get(user_id) == license_key:
-        bot.reply_to(message, "✅ Lisensi Anda valid!")
+    if user_id in licenses and licenses[user_id]["key"] == license_key:
+        expires_at = datetime.strptime(licenses[user_id]["expires_at"], "%Y-%m-%d %H:%M:%S")
+        if datetime.now() > expires_at:
+            bot.reply_to(message, "❌ Lisensi Anda telah kedaluwarsa.")
+        else:
+            bot.reply_to(message, "✅ Lisensi Anda valid!")
     else:
         bot.reply_to(message, "❌ Lisensi tidak valid atau tidak terdaftar untuk perangkat ini.")
+
+# Command /set_expiry (Admin)
+@bot.message_handler(commands=['set_expiry'])
+def set_expiry(message):
+    try:
+        _, license_key, days = message.text.split()
+        days = int(days)
+
+        # Cari lisensi berdasarkan key
+        for user_id, license_data in licenses.items():
+            if license_data["key"] == license_key:
+                new_expiry = datetime.now() + timedelta(days=days)
+                licenses[user_id]["expires_at"] = new_expiry.strftime("%Y-%m-%d %H:%M:%S")
+                bot.reply_to(
+                    message,
+                    f"⏳ Tanggal kedaluwarsa lisensi `{license_key}` berhasil diperbarui:\n"
+                    f"📅 Baru: `{licenses[user_id]['expires_at']}`",
+                    parse_mode="Markdown"
+                )
+                return
+
+        bot.reply_to(message, "❌ Lisensi tidak ditemukan.", parse_mode="Markdown")
+    except ValueError:
+        bot.reply_to(message, "❌ Format salah. Gunakan format: `/set_expiry <license_key> <hari>`", parse_mode="Markdown")
 
 # Command /device_info
 @bot.message_handler(commands=['device_info'])
