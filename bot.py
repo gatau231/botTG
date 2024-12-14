@@ -17,7 +17,7 @@ licenses = {}
 
 # Command /start
 @bot.message_handler(commands=['start'])
-def startt(message):
+def start(message):
     welcome_message = (
         f"Selamat datang, {message.from_user.first_name}!\n\n"
         "📌 *Tentang Bot Ini:*\n"
@@ -38,7 +38,7 @@ def startt(message):
         "Selamat mencoba dan hubungi saya jika ada pertanyaan! 😊"
     )
     bot.reply_to(message, welcome_message, parse_mode="Markdown")
-def start(message):
+def startt(message):
     bot.reply_to(
         message,
         f"Selamat datang {message.from_user.first_name}! "
