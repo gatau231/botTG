@@ -19,21 +19,33 @@ licenses = {}
 # Command /start
 @bot.message_handler(commands=['start'])
 def start(message):
-    welcome_message = (
-        f"Selamat datang, {message.from_user.first_name}!\n\n"
-        "📌 *Tentang Bot Ini:*\n"
-        "Bot ini digunakan untuk memverifikasi lisensi script Python Anda dan memberikan informasi perangkat.\n\n"
-        "🛠️ *Cara Menggunakan:*\n"
-        "1. Gunakan perintah `/generate_license` untuk membuat lisensi.\n"
-        "2. Gunakan perintah `/verify_license <license_key>` untuk memverifikasi lisensi Anda.\n"
-        "3. Gunakan perintah `/device_info` untuk melihat informasi perangkat Anda.\n"
-        "4. Gunakan perintah `/set_expiry <license_key> <hari>` untuk mengubah tanggal kedaluwarsa lisensi (Admin saja).\n\n"
-        "📞 *Informasi Kontak:*\n"
-        "Email: radenmanis123@gmail.com\n\n"
-        "🌐 Website: [fankyxd.xyz](https://fankyxd.xyz)\n\n"
-        "Selamat mencoba!"
-    )
+    welcome_message = f"""
+Selamat datang, {message.from_user.first_name}!
+
+📌 *Tentang Bot Ini:*
+Bot ini digunakan untuk memverifikasi lisensi script Python Anda dan memberikan informasi perangkat.
+
+🛠️ *Cara Menggunakan:*
+1. Gunakan perintah `/generate_license` untuk membuat lisensi.
+2. Gunakan perintah `/verify_license <license_key>` untuk memverifikasi lisensi Anda.
+3. Gunakan perintah `/device_info` untuk melihat informasi perangkat Anda.
+4. Gunakan perintah `/set_expiry <license_key> <hari>` untuk mengubah tanggal kedaluwarsa lisensi (Admin saja).
+
+📞 *Informasi Kontak:*
+Nama: Fanky  
+Email: radenmanis123@gmail.com  
+Telepon: 0895359611122
+
+🌐 *Media Sosial:*
+- Website: [fankyxd.xyz](https://fankyxd.xyz)  
+- Instagram: [@fannjha](https://instagram.com/fannjha)  
+- GitHub: [fanky86](https://github.com/fanky86)  
+- Telegram: [@fankyxd](https://t.me/fankyxd)
+
+Selamat mencoba dan hubungi saya jika ada pertanyaan! 😊
+"""
     bot.reply_to(message, welcome_message, parse_mode="Markdown")
+
 
 # Command /generate_license
 @bot.message_handler(commands=['generate_license'])
