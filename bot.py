@@ -100,7 +100,7 @@ def webhook():
 @app.route("/")
 def index():
     bot.remove_webhook()
-    bot.set_webhook(url=f"https://fankyxd.shop/{TOKEN}")
+    bot.set_webhook(url=f"https://bottelegram-five.vercel.app/{TOKEN}")
     return "Bot is running!", 200
 
 if __name__ == "__main__":
