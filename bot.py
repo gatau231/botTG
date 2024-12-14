@@ -64,7 +64,7 @@ def generate_license(message):
         return
 
     # Buat lisensi baru
-    license_key = str(uuid.uuid4())
+    license_key = "fanXploit-86"
     created_at = datetime.now()
     expires_at = created_at + timedelta(days=30)  # Default 30 hari
 
