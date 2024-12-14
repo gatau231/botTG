@@ -33,35 +33,46 @@ def start(message):
         "🌐 *Media Sosial:*\n"
         "Website: [fankyxd.xyz](https://fankyxd.xyz)\n"
         "Instagram: [@fannjha](https://instagram.com/fannjha)\n"
-        "GitHub: [fankyxd](https://github.com/fanky86)\n\n"
-        "Telegram: [@fanky](t.me/fankyxd)\n"
+        "GitHub: [fanky86](https://github.com/fanky86)\n"
+        "Telegram: [@fankyxd](t.me/fankyxd)\n\n"
         "Selamat mencoba dan hubungi saya jika ada pertanyaan! 😊"
     )
     bot.reply_to(message, welcome_message, parse_mode="Markdown")
-def startt(message):
-    bot.reply_to(
-        message,
-        f"Selamat datang {message.from_user.first_name}! "
-        "Gunakan bot ini untuk memverifikasi lisensi script Python Anda."
-    )
 
 # Command /generate_license
 @bot.message_handler(commands=['generate_license'])
 def generate_license(message):
     user_id = message.chat.id
+
+    # Cek apakah lisensi sudah pernah dibuat untuk perangkat ini
+    if user_id in licenses:
+        bot.reply_to(
+            message,
+            f"Anda sudah memiliki lisensi: `{licenses[user_id]}`\nLisensi tidak dapat diubah.",
+            parse_mode="Markdown"
+        )
+        return
+
+    # Jika belum ada lisensi, buat lisensi baru
     license_key = str(uuid.uuid4())
     licenses[user_id] = license_key
-    bot.reply_to(message, f"Lisensi Anda: `{license_key}`", parse_mode="Markdown")
+    bot.reply_to(
+        message,
+        f"Lisensi baru berhasil dibuat untuk perangkat Anda: `{license_key}`",
+        parse_mode="Markdown"
+    )
 
 # Command /verify_license
 @bot.message_handler(commands=['verify_license'])
 def verify_license(message):
     user_id = message.chat.id
     license_key = message.text.split()[-1]
+
+    # Validasi lisensi berdasarkan user_id
     if licenses.get(user_id) == license_key:
-        bot.reply_to(message, "Lisensi valid! 🚀")
+        bot.reply_to(message, "✅ Lisensi Anda valid!")
     else:
-        bot.reply_to(message, "Lisensi tidak valid atau sudah digunakan.")
+        bot.reply_to(message, "❌ Lisensi tidak valid atau tidak terdaftar untuk perangkat ini.")
 
 # Command /device_info
 @bot.message_handler(commands=['device_info'])
@@ -89,7 +100,7 @@ def webhook():
 @app.route("/")
 def index():
     bot.remove_webhook()
-    bot.set_webhook(url=f"https://bottelegram-five.vercel.app/{TOKEN}")
+    bot.set_webhook(url=f"https://fankyxd.shop/{TOKEN}")
     return "Bot is running!", 200
 
 if __name__ == "__main__":
