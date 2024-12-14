@@ -54,15 +54,13 @@ def generate_license(message):
 
     # Cek apakah lisensi sudah pernah dibuat
     if user_id in licenses:
-        sent_message = bot.reply_to(
+        bot.reply_to(
             message,
             f"Anda sudah memiliki lisensi: `{licenses[user_id]['key']}`\n"
             f"📅 Dibuat pada: `{licenses[user_id]['created_at']}`\n"
             f"⏳ Kedaluwarsa: `{licenses[user_id]['expires_at']}`",
             parse_mode="Markdown"
         )
-        # Membaca pesan yang dikirim oleh bot
-        read_message_from_bot(sent_message)
         return
 
     # Buat lisensi baru
@@ -76,7 +74,7 @@ def generate_license(message):
         "expires_at": expires_at.strftime("%Y-%m-%d %H:%M:%S")
     }
 
-    sent_message = bot.reply_to(
+    bot.reply_to(
         message,
         f"🔑 Lisensi berhasil dibuat:\n"
         f"Lisensi: `{license_key}`\n"
@@ -84,26 +82,6 @@ def generate_license(message):
         f"Kedaluwarsa: `{licenses[user_id]['expires_at']}`",
         parse_mode="Markdown"
     )
-
-    # Membaca kembali pesan yang dikirim oleh bot
-    read_message_from_bot(sent_message)
-
-# Fungsi untuk membaca pesan yang dikirim oleh bot
-def read_message_from_bot(sent_message):
-    # Mendapatkan detail pesan yang baru dikirim
-    message_id = sent_message.message_id
-    chat_id = sent_message.chat.id
-    text = sent_message.text
-
-    print(f"Pesan yang baru dikirim oleh bot:")
-    print(f"Chat ID: {chat_id}")
-    print(f"Message ID: {message_id}")
-    print(f"Teks: {text}")
-
-    # Jika diperlukan, tambahkan logika pemrosesan lebih lanjut di sini
-    if "Lisensi berhasil dibuat" in text:
-        print(f"Lisensi yang dibuat dan dikirim bot: {text}")
-
 
 # Command /verify_license
 @bot.message_handler(commands=['verify_license'])
@@ -120,7 +98,10 @@ def verify_license(message):
             if datetime.now() > expires_at:
                 bot.reply_to(message, "❌ Lisensi Anda telah kedaluwarsa.")
             else:
-                bot.reply_to(message, "✅ Lisensi valid!")
+                bot.reply_to(message, "✅ Lisensi valid! Admin akan mengonfirmasi untuk login.")
+                # Kirim pesan ke admin untuk verifikasi
+                admin_message = f"Pengguna {message.from_user.first_name} meminta akses dengan lisensi `{license_key}`. Apakah Anda ingin mengizinkan login? (yes/no)"
+                bot.send_message(getenv("ADMIN_CHAT_ID"), admin_message)
             return
 
     bot.reply_to(message, "❌ Lisensi tidak ditemukan.")
@@ -146,6 +127,19 @@ def set_expiry(message):
         bot.reply_to(message, "❌ Lisensi tidak ditemukan.")
     except ValueError:
         bot.reply_to(message, "❌ Gunakan format: `/set_expiry <license_key> <hari>`", parse_mode="Markdown")
+
+# Admin memverifikasi apakah lisensi bisa digunakan untuk login
+@bot.message_handler(func=lambda message: message.chat.id == int(getenv("ADMIN_CHAT_ID")))
+def admin_verify(message):
+    if message.text.lower() in ["yes", "no"]:
+        license_key = message.text.split()[0] if message.text.lower() == "yes" else ""
+        # Proses login jika 'yes'
+        if license_key:
+            bot.reply_to(message, f"Lisensi `{license_key}` telah disetujui untuk login.")
+        else:
+            bot.reply_to(message, "Lisensi ditolak untuk login.")
+    else:
+        bot.reply_to(message, "❌ Harap jawab dengan 'yes' atau 'no'.")
 
 # Endpoint validasi lisensi untuk script premium
 @app.route("/validate_license", methods=["POST"])
