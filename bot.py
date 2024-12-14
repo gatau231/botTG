@@ -1,5 +1,4 @@
 import telebot
-import platform
 import uuid
 from flask import Flask, request
 from os import getenv
@@ -30,22 +29,8 @@ Bot ini digunakan untuk memverifikasi lisensi script Python Anda dan memberikan 
 2. Gunakan perintah `/verify_license <license_key>` untuk memverifikasi lisensi Anda.
 3. Gunakan perintah `/device_info` untuk melihat informasi perangkat Anda.
 4. Gunakan perintah `/set_expiry <license_key> <hari>` untuk mengubah tanggal kedaluwarsa lisensi (Admin saja).
-
-📞 *Informasi Kontak:*
-Nama: Fanky  
-Email: radenmanis123@gmail.com  
-Telepon: 0895359611122
-
-🌐 *Media Sosial:*
-- Website: [fankyxd.xyz](https://fankyxd.xyz)  
-- Instagram: [@fannjha](https://instagram.com/fannjha)  
-- GitHub: [fanky86](https://github.com/fanky86)  
-- Telegram: [@fankyxd](https://t.me/fankyxd)
-
-Selamat mencoba dan hubungi saya jika ada pertanyaan! 😊
-"""
+    """
     bot.reply_to(message, welcome_message, parse_mode="Markdown")
-
 
 # Command /generate_license
 @bot.message_handler(commands=['generate_license'])
@@ -77,78 +62,26 @@ def generate_license(message):
     # Mengirimkan pesan lisensi yang dihasilkan
     message_text = f"🔑 Lisensi berhasil dibuat:\nLisensi: `{license_key}`\nDibuat: `{licenses[user_id]['created_at']}`\nKedaluwarsa: `{licenses[user_id]['expires_at']}`"
     bot.reply_to(message, message_text, parse_mode="Markdown")
-    
-    # Bot akan membaca kembali pesan yang baru dikirim (untuk keperluan mendapatkan lisensi)
-    read_license_from_bot(user_id)
 
-# Fungsi untuk membaca lisensi yang dikirim oleh bot
-def read_license_from_bot(user_id):
-    # Simulasi bot membaca pesan lisensi dari dirinya sendiri
-    license_info = licenses.get(user_id)
-    if license_info:
-        print(f"Lisensi yang dikirimkan bot untuk user {user_id}: {license_info['key']}")
-        print(f"Created at: {license_info['created_at']}, Expired at: {license_info['expires_at']}")
-        # Lakukan apa yang diperlukan dengan informasi lisensi ini
-        # Misalnya, menyimpannya dalam database atau memberikan notifikasi
+    # Setelah mengirimkan pesan, bot akan memproses pesan yang dikirim (membaca dan mengaksesnya)
+    read_message_from_bot(message)
+
+# Fungsi untuk membaca pesan yang dikirim oleh bot
+def read_message_from_bot(message):
+    # Mendapatkan ID pesan yang dikirim oleh bot
+    message_id = message.message_id
+    chat_id = message.chat.id
+
+    # Akses pesan yang baru dikirim oleh bot menggunakan message_id
+    print(f"Bot mengirimkan pesan dengan ID: {message_id} ke chat ID: {chat_id}")
+    print(f"Pesan yang dikirim oleh bot: {message.text}")
+
+    # Simulasi mengakses pesan yang dikirim
+    # Jika perlu, simpan informasi ini atau lakukan aksi lainnya
+    if 'Lisensi berhasil dibuat' in message.text:
+        print(f"Lisensi yang dibuat: {message.text}")
     else:
-        print("❌ Lisensi tidak ditemukan untuk pengguna ini.")
-
-# Command /verify_license
-@bot.message_handler(commands=['verify_license'])
-def verify_license(message):
-    try:
-        license_key = message.text.split()[1]
-    except IndexError:
-        bot.reply_to(message, "❌ Gunakan format: `/verify_license <license_key>`", parse_mode="Markdown")
-        return
-
-    for user_id, license_data in licenses.items():
-        if license_data["key"] == license_key:
-            expires_at = datetime.strptime(license_data["expires_at"], "%Y-%m-%d %H:%M:%S")
-            if datetime.now() > expires_at:
-                bot.reply_to(message, "❌ Lisensi Anda telah kedaluwarsa.")
-            else:
-                bot.reply_to(message, "✅ Lisensi valid!")
-            return
-
-    bot.reply_to(message, "❌ Lisensi tidak ditemukan.")
-
-# Command /set_expiry
-@bot.message_handler(commands=['set_expiry'])
-def set_expiry(message):
-    try:
-        _, license_key, days = message.text.split()
-        days = int(days)
-
-        for user_id, license_data in licenses.items():
-            if license_data["key"] == license_key:
-                new_expiry = datetime.now() + timedelta(days=days)
-                licenses[user_id]["expires_at"] = new_expiry.strftime("%Y-%m-%d %H:%M:%S")
-                bot.reply_to(
-                    message,
-                    f"⏳ Kedaluwarsa lisensi diperbarui: `{licenses[user_id]['expires_at']}`",
-                    parse_mode="Markdown"
-                )
-                return
-
-        bot.reply_to(message, "❌ Lisensi tidak ditemukan.")
-    except ValueError:
-        bot.reply_to(message, "❌ Gunakan format: `/set_expiry <license_key> <hari>`", parse_mode="Markdown")
-
-# Endpoint validasi lisensi untuk script premium
-@app.route("/validate_license", methods=["POST"])
-def validate_license():
-    data = request.get_json()
-    license_key = data.get("license_key")
-
-    for user_id, license_data in licenses.items():
-        if license_data["key"] == license_key:
-            expires_at = datetime.strptime(license_data["expires_at"], "%Y-%m-%d %H:%M:%S")
-            if datetime.now() > expires_at:
-                return {"status": "invalid", "message": "Lisensi telah kedaluwarsa."}
-            return {"status": "valid", "message": "Lisensi valid."}
-
-    return {"status": "invalid", "message": "Lisensi tidak ditemukan."}
+        print("Pesan tidak mengandung informasi lisensi.")
 
 # Webhook untuk Telegram
 @app.route(f"/{TOKEN}", methods=["POST"])
