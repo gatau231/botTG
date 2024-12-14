@@ -101,7 +101,7 @@ def webhook():
 def index():
     bot.remove_webhook()
     bot.set_webhook(url=f"https://bottelegram-five.vercel.app/{TOKEN}")
-    return "Bot is running!", 200
+    return "Bot is running!, bot ku https://t.me/Licensi_fan_bot", 200
 
 if __name__ == "__main__":
     app.run(debug=True)
