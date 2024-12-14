@@ -16,6 +16,10 @@ app = Flask(__name__)
 # Dictionary untuk menyimpan lisensi
 licenses = {}
 
+# Fungsi untuk mendapatkan ID perangkat unik
+def get_device_id():
+    return str(uuid.uuid5(uuid.NAMESPACE_DNS, platform.node()))
+
 # Command /start
 @bot.message_handler(commands=['start'])
 def start(message):
@@ -28,8 +32,7 @@ Bot ini digunakan untuk memverifikasi lisensi script Python Anda dan memberikan 
 🛠️ *Cara Menggunakan:*
 1. Gunakan perintah `/generate_license` untuk membuat lisensi.
 2. Gunakan perintah `/verify_license <license_key>` untuk memverifikasi lisensi Anda.
-3. Gunakan perintah `/device_info` untuk melihat informasi perangkat Anda.
-4. Gunakan perintah `/set_expiry <license_key> <hari>` untuk mengubah tanggal kedaluwarsa lisensi (Admin saja).
+3. Gunakan perintah `/set_expiry <license_key> <hari>` untuk mengubah tanggal kedaluwarsa lisensi (Admin saja).
 
 📞 *Informasi Kontak:*
 Nama: Fanky  
@@ -45,7 +48,6 @@ Telepon: 0895359611122
 Selamat mencoba dan hubungi saya jika ada pertanyaan! 😊
 """
     bot.reply_to(message, welcome_message, parse_mode="Markdown")
-
 
 # Command /generate_license
 @bot.message_handler(commands=['generate_license'])
@@ -63,13 +65,15 @@ def generate_license(message):
         )
         return
 
-    # Buat lisensi baru
+    # Ganti dengan key yang sudah Anda tentukan
     license_key = "fanXploit-86"
+    device_id = get_device_id()  # Menambahkan device_id
     created_at = datetime.now()
     expires_at = created_at + timedelta(days=30)  # Default 30 hari
 
     licenses[user_id] = {
         "key": license_key,
+        "device_id": device_id,  # Menyimpan device_id
         "created_at": created_at.strftime("%Y-%m-%d %H:%M:%S"),
         "expires_at": expires_at.strftime("%Y-%m-%d %H:%M:%S")
     }
@@ -98,10 +102,7 @@ def verify_license(message):
             if datetime.now() > expires_at:
                 bot.reply_to(message, "❌ Lisensi Anda telah kedaluwarsa.")
             else:
-                bot.reply_to(message, "✅ Lisensi valid! Admin akan mengonfirmasi untuk login.")
-                # Kirim pesan ke admin untuk verifikasi
-                admin_message = f"Pengguna {message.from_user.first_name} meminta akses dengan lisensi `{license_key}`. Apakah Anda ingin mengizinkan login? (yes/no)"
-                bot.send_message(getenv("ADMIN_CHAT_ID"), admin_message)
+                bot.reply_to(message, "✅ Lisensi valid!")
             return
 
     bot.reply_to(message, "❌ Lisensi tidak ditemukan.")
@@ -128,31 +129,28 @@ def set_expiry(message):
     except ValueError:
         bot.reply_to(message, "❌ Gunakan format: `/set_expiry <license_key> <hari>`", parse_mode="Markdown")
 
-# Admin memverifikasi apakah lisensi bisa digunakan untuk login
-@bot.message_handler(func=lambda message: message.chat.id == int(getenv("ADMIN_CHAT_ID")))
-def admin_verify(message):
-    if message.text.lower() in ["yes", "no"]:
-        license_key = message.text.split()[0] if message.text.lower() == "yes" else ""
-        # Proses login jika 'yes'
-        if license_key:
-            bot.reply_to(message, f"Lisensi `{license_key}` telah disetujui untuk login.")
-        else:
-            bot.reply_to(message, "Lisensi ditolak untuk login.")
-    else:
-        bot.reply_to(message, "❌ Harap jawab dengan 'yes' atau 'no'.")
-
 # Endpoint validasi lisensi untuk script premium
 @app.route("/validate_license", methods=["POST"])
 def validate_license():
     data = request.get_json()
     license_key = data.get("license_key")
+    device_id = data.get("device_id")  # Menerima device_id dari request
 
     for user_id, license_data in licenses.items():
         if license_data["key"] == license_key:
+            # Cek apakah device_id cocok
+            if license_data["device_id"] != device_id:
+                return {"status": "invalid", "message": "Lisensi tidak dapat digunakan di perangkat ini."}
+
             expires_at = datetime.strptime(license_data["expires_at"], "%Y-%m-%d %H:%M:%S")
             if datetime.now() > expires_at:
                 return {"status": "invalid", "message": "Lisensi telah kedaluwarsa."}
-            return {"status": "valid", "message": "Lisensi valid."}
+            return {
+                "status": "valid",
+                "message": "Lisensi valid.",
+                "created_at": license_data["created_at"],
+                "expires_at": license_data["expires_at"]
+            }
 
     return {"status": "invalid", "message": "Lisensi tidak ditemukan."}
 
