@@ -18,6 +18,27 @@ licenses = {}
 # Command /start
 @bot.message_handler(commands=['start'])
 def start(message):
+    welcome_message = (
+        f"Selamat datang, {message.from_user.first_name}!\n\n"
+        "📌 *Tentang Bot Ini:*\n"
+        "Bot ini digunakan untuk memverifikasi lisensi script Python Anda dan memberikan informasi perangkat.\n\n"
+        "🛠️ *Cara Menggunakan:*\n"
+        "1. Gunakan perintah `/generate_license` untuk membuat lisensi.\n"
+        "2. Gunakan perintah `/verify_license <license_key>` untuk memverifikasi lisensi Anda.\n"
+        "3. Gunakan perintah `/device_info` untuk melihat informasi perangkat Anda.\n\n"
+        "📞 *Informasi Kontak:*\n"
+        f"Nama: Fanky\n"
+        f"Email: radenmanis123@gmail.com\n"
+        f"Telepon: 0895359611122\n\n"
+        "🌐 *Media Sosial:*\n"
+        "Website: [fankyxd.xyz](https://fankyxd.xyz)\n"
+        "Instagram: [@fannjha](https://instagram.com/fannjha)\n"
+        "GitHub: [fankyxd](https://github.com/fanky86)\n\n"
+        "Telegram: [@fanky](t.me/fankyxd)\n"
+        "Selamat mencoba dan hubungi saya jika ada pertanyaan! 😊"
+    )
+    bot.reply_to(message, welcome_message, parse_mode="Markdown")
+def startt(message):
     bot.reply_to(
         message,
         f"Selamat datang {message.from_user.first_name}! "
