@@ -74,14 +74,24 @@ def generate_license(message):
         "expires_at": expires_at.strftime("%Y-%m-%d %H:%M:%S")
     }
 
-    bot.reply_to(
-        message,
-        f"🔑 Lisensi berhasil dibuat:\n"
-        f"Lisensi: `{license_key}`\n"
-        f"Dibuat: `{licenses[user_id]['created_at']}`\n"
-        f"Kedaluwarsa: `{licenses[user_id]['expires_at']}`",
-        parse_mode="Markdown"
-    )
+    # Mengirimkan pesan lisensi yang dihasilkan
+    message_text = f"🔑 Lisensi berhasil dibuat:\nLisensi: `{license_key}`\nDibuat: `{licenses[user_id]['created_at']}`\nKedaluwarsa: `{licenses[user_id]['expires_at']}`"
+    bot.reply_to(message, message_text, parse_mode="Markdown")
+    
+    # Bot akan membaca kembali pesan yang baru dikirim (untuk keperluan mendapatkan lisensi)
+    read_license_from_bot(user_id)
+
+# Fungsi untuk membaca lisensi yang dikirim oleh bot
+def read_license_from_bot(user_id):
+    # Simulasi bot membaca pesan lisensi dari dirinya sendiri
+    license_info = licenses.get(user_id)
+    if license_info:
+        print(f"Lisensi yang dikirimkan bot untuk user {user_id}: {license_info['key']}")
+        print(f"Created at: {license_info['created_at']}, Expired at: {license_info['expires_at']}")
+        # Lakukan apa yang diperlukan dengan informasi lisensi ini
+        # Misalnya, menyimpannya dalam database atau memberikan notifikasi
+    else:
+        print("❌ Lisensi tidak ditemukan untuk pengguna ini.")
 
 # Command /verify_license
 @bot.message_handler(commands=['verify_license'])
