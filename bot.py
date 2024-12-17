@@ -4,8 +4,7 @@ from flask import Flask, request
 from os import getenv
 from dotenv import load_dotenv
 import openai
-from telegram import Update
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
+from telebot import types
 
 # Load environment variables
 load_dotenv()
@@ -25,29 +24,6 @@ def get_ai_response(user_message: str) -> str:
         max_tokens=150
     )
     return response.choices[0].text.strip()
-
-# Fungsi untuk menangani pesan masuk dari pengguna
-def respond_to_message(update: Update, context: CallbackContext) -> None:
-    user_message = update.message.text
-    ai_response = get_ai_response(user_message)
-    update.message.reply_text(ai_response)
-
-# Fungsi untuk start bot
-def start(update: Update, context: CallbackContext) -> None:
-    update.message.reply_text('Halo! Saya adalah bot AI. Tanyakan apa saja!')
-
-def main():
-    # Inisialisasi Updater dan Dispatcher
-    updater = Updater(TOKEN)
-    dispatcher = updater.dispatcher
-
-    # Menambahkan handler untuk command /start dan pesan masuk
-    dispatcher.add_handler(CommandHandler("start", start))
-    dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, respond_to_message))
-
-    # Mulai bot
-    updater.start_polling()
-    updater.idle()
 
 # Inisialisasi telebot untuk bot Telegram
 bot = telebot.TeleBot(TOKEN)
@@ -72,12 +48,11 @@ def greet_new_member(message):
 def auto_reply_sticker(message):
     bot.reply_to(message, "Stiker diterima! 🎉")
 
-from telebot import types
-
 # Fungsi untuk kick user
 @bot.message_handler(commands=['kick'])
 def kick_user(message):
     # Cek apakah pengirim adalah admin
+    ADMIN_IDS = []  # Definisikan ID admin di sini
     if message.from_user.id not in ADMIN_IDS:
         bot.reply_to(message, "Hanya admin yang dapat menggunakan perintah ini!")
         return
@@ -109,6 +84,8 @@ def handle_kick(call):
     member_id = int(call.data.split("_")[1])
     chat_id = call.message.chat.id
 
+    # Cek apakah yang menekan tombol adalah admin
+    ADMIN_IDS = []  # Definisikan ID admin di sini
     if call.from_user.id not in ADMIN_IDS:
         bot.answer_callback_query(call.id, "Hanya admin yang dapat menggunakan tombol ini!")
         return
@@ -118,51 +95,6 @@ def handle_kick(call):
         bot.answer_callback_query(call.id, "Anggota berhasil dikeluarkan!")
     except Exception as e:
         bot.answer_callback_query(call.id, f"Gagal mengeluarkan anggota: {str(e)}")
-
-@bot.message_handler(func=lambda message: message.text == "Kick User")
-def prompt_kick(message):
-    if message.from_user.id not in ADMIN_IDS:
-        bot.reply_to(message, "Hanya admin yang dapat menggunakan fitur ini!")
-        return
-
-    member_id = ...  # Masukkan ID pengguna yang ingin dikeluarkan
-    bot.send_message(
-        message.chat.id,
-        "Apakah Anda yakin ingin mengeluarkan anggota ini?",
-        reply_markup=kick_button(member_id)
-    )
-
-# Pesan perpisahan
-@bot.message_handler(content_types=["left_chat_member"])
-def farewell_member(message):
-    bot.send_message(
-        message.chat.id,
-        f"👋 Selamat tinggal, {message.left_chat_member.first_name}. Semoga sukses ke depannya!"
-    )
-
-# Kick anggota yang mengirim stiker jorok
-@bot.message_handler(content_types=["sticker"])
-def handle_sticker(message):
-    sticker_id = message.sticker.file_id
-    if sticker_id in banned_stickers:
-        bot.reply_to(message, "⚠️ Stiker ini tidak diperbolehkan!")
-        bot.kick_chat_member(message.chat.id, message.from_user.id)
-
-# Kick anggota yang berperilaku menipu
-@bot.message_handler(content_types=["text"])
-def handle_text(message):
-    # Contoh pola untuk mendeteksi penipuan
-    fraud_patterns = [
-        r"(?i)jual akun",
-        r"(?i)transfer uang",
-        r"(?i)klik link ini",
-        r"(?i)hadiah gratis"
-    ]
-    for pattern in fraud_patterns:
-        if re.search(pattern, message.text):
-            bot.reply_to(message, "⚠️ Pesan ini mencurigakan! Anda akan dikeluarkan.")
-            bot.kick_chat_member(message.chat.id, message.from_user.id)
-            return
 
 # Webhook untuk Telegram
 @app.route(f"/{TOKEN}", methods=["POST"])
@@ -176,7 +108,7 @@ def webhook():
 @app.route("/")
 def index():
     bot.remove_webhook()
-    bot.set_webhook(url=f"https://bottelegram-two.vercel.app/{TOKEN}")
+    bot.set_webhook(url=f"https://{getenv('VERCEL_URL')}/{TOKEN}")
     return "Bot is running!", 200
 
 if __name__ == "__main__":
