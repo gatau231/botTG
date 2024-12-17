@@ -15,15 +15,16 @@ bot = Bot(token=TELEGRAM_TOKEN)
 # Inisialisasi Flask app
 app = Flask(__name__)
 
-# Fungsi untuk merespons pesan menggunakan OpenAI
+# Fungsi untuk merespons pesan menggunakan OpenAI (API terbaru)
 def get_ai_response(user_message):
-    response = openai.Completion.create(
-        engine="text-davinci-003",
-        prompt=user_message,
-        max_tokens=150,
-        temperature=0.7,
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",  # atau gunakan model yang sesuai dengan kebutuhan Anda
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": user_message}
+        ]
     )
-    return response.choices[0].text.strip()
+    return response['choices'][0]['message']['content'].strip()
 
 # Fungsi untuk menangani pesan masuk dari Telegram
 @app.route("/webhook", methods=["POST"])
