@@ -1,9 +1,7 @@
 import telebot
-import platform
-import uuid
+import re
 from flask import Flask, request
 from os import getenv
-from datetime import datetime, timedelta
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -13,146 +11,49 @@ bot = telebot.TeleBot(TOKEN)
 # Flask untuk Vercel
 app = Flask(__name__)
 
-# Dictionary untuk menyimpan lisensi
-licenses = {}
+# Daftar stiker terlarang (contoh: tambahkan ID stiker jorok di sini)
+banned_stickers = ["CAACAgIAAxkBAAIBZGJor3QphRUC9ZoRZfbg8AABCrwAAeMZAAJWkEsKFnGgVJh44jYeBA"]
 
-# Fungsi untuk mendapatkan ID perangkat unik
-def get_device_id():
-    return str(uuid.uuid5(uuid.NAMESPACE_DNS, platform.node()))
-
-# Command /start
-@bot.message_handler(commands=['start'])
-def start(message):
-    welcome_message = f"""
-Selamat datang, {message.from_user.first_name}!
-
-📌 *Tentang Bot Ini:*
-Bot ini digunakan untuk memverifikasi lisensi script Python Anda dan memberikan informasi perangkat.
-
-🛠️ *Cara Menggunakan:*
-1. Gunakan perintah `/generate_license` untuk membuat lisensi.
-2. Gunakan perintah `/verify_license <license_key>` untuk memverifikasi lisensi Anda.
-3. Gunakan perintah `/set_expiry <license_key> <hari>` untuk mengubah tanggal kedaluwarsa lisensi (Admin saja).
-
-📞 *Informasi Kontak:*
-Nama: Fanky  
-Email: radenmanis123@gmail.com  
-Telepon: 0895359611122
-
-🌐 *Media Sosial:*
-- Website: [fankyxd.xyz](https://fankyxd.xyz)  
-- Instagram: [@fannjha](https://instagram.com/fannjha)  
-- GitHub: [fanky86](https://github.com/fanky86)  
-- Telegram: [@fankyxd](https://t.me/fankyxd)
-
-Selamat mencoba dan hubungi saya jika ada pertanyaan! 😊
-"""
-    bot.reply_to(message, welcome_message, parse_mode="Markdown")
-
-# Command /generate_license
-@bot.message_handler(commands=['generate_license'])
-def generate_license(message):
-    user_id = message.chat.id
-
-    # Cek apakah lisensi sudah pernah dibuat
-    if user_id in licenses:
-        bot.reply_to(
-            message,
-            f"Anda sudah memiliki lisensi: `{licenses[user_id]['key']}`\n"
-            f"📅 Dibuat pada: `{licenses[user_id]['created_at']}`\n"
-            f"⏳ Kedaluwarsa: `{licenses[user_id]['expires_at']}`",
-            parse_mode="Markdown"
+# Pesan selamat datang
+@bot.message_handler(content_types=["new_chat_members"])
+def greet_new_member(message):
+    for new_member in message.new_chat_members:
+        bot.send_message(
+            message.chat.id,
+            f"👋 Selamat datang, {new_member.first_name}! Semoga betah di grup ini!"
         )
-        return
 
-    # Ganti dengan key yang sudah Anda tentukan
-    license_key = "fanXploit-86"
-    device_id = get_device_id()  # Menambahkan device_id
-    created_at = datetime.now()
-    expires_at = created_at + timedelta(days=30)  # Default 30 hari
-
-    licenses[user_id] = {
-        "key": license_key,
-        "device_id": device_id,  # Menyimpan device_id
-        "created_at": created_at.strftime("%Y-%m-%d %H:%M:%S"),
-        "expires_at": expires_at.strftime("%Y-%m-%d %H:%M:%S")
-    }
-
-    bot.reply_to(
-        message,
-        f"🔑 Lisensi berhasil dibuat:\n"
-        f"Lisensi: `{license_key}`\n"
-        f"Dibuat: `{licenses[user_id]['created_at']}`\n"
-        f"Kedaluwarsa: `{licenses[user_id]['expires_at']}`",
-        parse_mode="Markdown"
+# Pesan perpisahan
+@bot.message_handler(content_types=["left_chat_member"])
+def farewell_member(message):
+    bot.send_message(
+        message.chat.id,
+        f"👋 Selamat tinggal, {message.left_chat_member.first_name}. Semoga sukses ke depannya!"
     )
 
-# Command /verify_license
-@bot.message_handler(commands=['verify_license'])
-def verify_license(message):
-    try:
-        license_key = message.text.split()[1]
-    except IndexError:
-        bot.reply_to(message, "❌ Gunakan format: `/verify_license <license_key>`", parse_mode="Markdown")
-        return
+# Kick anggota yang mengirim stiker jorok
+@bot.message_handler(content_types=["sticker"])
+def handle_sticker(message):
+    sticker_id = message.sticker.file_id
+    if sticker_id in banned_stickers:
+        bot.reply_to(message, "⚠️ Stiker ini tidak diperbolehkan!")
+        bot.kick_chat_member(message.chat.id, message.from_user.id)
 
-    for user_id, license_data in licenses.items():
-        if license_data["key"] == license_key:
-            expires_at = datetime.strptime(license_data["expires_at"], "%Y-%m-%d %H:%M:%S")
-            if datetime.now() > expires_at:
-                bot.reply_to(message, "❌ Lisensi Anda telah kedaluwarsa.")
-            else:
-                bot.reply_to(message, "✅ Lisensi valid!")
+# Kick anggota yang berperilaku menipu
+@bot.message_handler(content_types=["text"])
+def handle_text(message):
+    # Contoh pola untuk mendeteksi penipuan
+    fraud_patterns = [
+        r"(?i)jual akun",
+        r"(?i)transfer uang",
+        r"(?i)klik link ini",
+        r"(?i)hadiah gratis"
+    ]
+    for pattern in fraud_patterns:
+        if re.search(pattern, message.text):
+            bot.reply_to(message, "⚠️ Pesan ini mencurigakan! Anda akan dikeluarkan.")
+            bot.kick_chat_member(message.chat.id, message.from_user.id)
             return
-
-    bot.reply_to(message, "❌ Lisensi tidak ditemukan.")
-
-# Command /set_expiry
-@bot.message_handler(commands=['set_expiry'])
-def set_expiry(message):
-    try:
-        _, license_key, days = message.text.split()
-        days = int(days)
-
-        for user_id, license_data in licenses.items():
-            if license_data["key"] == license_key:
-                new_expiry = datetime.now() + timedelta(days=days)
-                licenses[user_id]["expires_at"] = new_expiry.strftime("%Y-%m-%d %H:%M:%S")
-                bot.reply_to(
-                    message,
-                    f"⏳ Kedaluwarsa lisensi diperbarui: `{licenses[user_id]['expires_at']}`",
-                    parse_mode="Markdown"
-                )
-                return
-
-        bot.reply_to(message, "❌ Lisensi tidak ditemukan.")
-    except ValueError:
-        bot.reply_to(message, "❌ Gunakan format: `/set_expiry <license_key> <hari>`", parse_mode="Markdown")
-
-# Endpoint validasi lisensi untuk script premium
-@app.route("/validate_license", methods=["POST"])
-def validate_license():
-    data = request.get_json()
-    license_key = data.get("license_key")
-    device_id = data.get("device_id")  # Menerima device_id dari request
-
-    for user_id, license_data in licenses.items():
-        if license_data["key"] == license_key:
-            # Cek apakah device_id cocok
-            if license_data["device_id"] != device_id:
-                return {"status": "invalid", "message": "Lisensi tidak dapat digunakan di perangkat ini."}
-
-            expires_at = datetime.strptime(license_data["expires_at"], "%Y-%m-%d %H:%M:%S")
-            if datetime.now() > expires_at:
-                return {"status": "invalid", "message": "Lisensi telah kedaluwarsa."}
-            return {
-                "status": "valid",
-                "message": "Lisensi valid.",
-                "created_at": license_data["created_at"],
-                "expires_at": license_data["expires_at"]
-            }
-
-    return {"status": "invalid", "message": "Lisensi tidak ditemukan."}
 
 # Webhook untuk Telegram
 @app.route(f"/{TOKEN}", methods=["POST"])
