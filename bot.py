@@ -10,8 +10,8 @@ from telebot import types
 load_dotenv()
 
 # Set API Key Telegram dan OpenAI
-TOKEN = getenv("TELEGRAM_API_TOKEN")
-OPENAI_API_KEY = getenv("TOKEN_OPENAI_KEY")
+TOKEN = os.getenv("TELEGRAM_API_TOKEN")
+OPENAI_API_KEY = os.getenv("TOKEN_OPENAI_KEY")
 
 # Inisialisasi OpenAI
 openai.api_key = OPENAI_API_KEY
