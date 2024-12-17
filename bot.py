@@ -6,14 +6,14 @@ from dotenv import load_dotenv
 import openai
 from telebot import types
 
-# Load environment variables
+# Muat file .env jika Anda sedang mengembangkan secara lokal
 load_dotenv()
 
-# Set API Key Telegram dan OpenAI
-TOKEN = os.getenv("TELEGRAM_API_TOKEN")
+# Ambil token dari environment variables
+TELEGRAM_API_TOKEN = os.getenv("TELEGRAM_API_TOKEN")
 OPENAI_API_KEY = os.getenv("TOKEN_OPENAI_KEY")
 
-# Inisialisasi OpenAI
+# Sekarang Anda bisa menggunakan TELEGRAM_API_TOKEN dan OPENAI_API_KEY di kode Anda
 openai.api_key = OPENAI_API_KEY
 
 # Fungsi untuk menghubungkan OpenAI API
