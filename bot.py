@@ -7,9 +7,11 @@ import openai
 from telegram import Update
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
 
+# Load environment variables
+load_dotenv()
+
 # Set API Key Telegram dan OpenAI
 TOKEN = getenv("TELEGRAM_API_TOKEN")
-TELEGRAM_API_TOKEN = getenv("TELEGRAM_API_TOKEN")
 OPENAI_API_KEY = getenv("TOKEN_OPENAI_KEY")
 
 # Inisialisasi OpenAI
@@ -36,7 +38,7 @@ def start(update: Update, context: CallbackContext) -> None:
 
 def main():
     # Inisialisasi Updater dan Dispatcher
-    updater = Updater(TELEGRAM_API_TOKEN)
+    updater = Updater(TOKEN)
     dispatcher = updater.dispatcher
 
     # Menambahkan handler untuk command /start dan pesan masuk
@@ -46,9 +48,8 @@ def main():
     # Mulai bot
     updater.start_polling()
     updater.idle()
-load_dotenv()
 
-
+# Inisialisasi telebot untuk bot Telegram
 bot = telebot.TeleBot(TOKEN)
 
 # Flask untuk Vercel
@@ -65,16 +66,19 @@ def greet_new_member(message):
             message.chat.id,
             f"👋 Selamat datang, {new_member.first_name}! Semoga betah di grup ini!"
         )
+
+# Auto-reply untuk stiker
 @bot.message_handler(content_types=["sticker"])
 def auto_reply_sticker(message):
     bot.reply_to(message, "Stiker diterima! 🎉")
 
-
 from telebot import types
 
+# Fungsi untuk kick user
 @bot.message_handler(commands=['kick'])
 def kick_user(message):
-    if not message.from_user.id in ADMIN_IDS:
+    # Cek apakah pengirim adalah admin
+    if message.from_user.id not in ADMIN_IDS:
         bot.reply_to(message, "Hanya admin yang dapat menggunakan perintah ini!")
         return
 
@@ -93,7 +97,7 @@ def kick_user(message):
     except Exception as e:
         bot.reply_to(message, f"Gagal mengeluarkan anggota: {str(e)}")
 
-# Fungsi tambahan untuk membuat tombol
+# Fungsi tambahan untuk membuat tombol Kick
 def kick_button(user_id):
     keyboard = types.InlineKeyboardMarkup()
     kick_button = types.InlineKeyboardButton("Kick", callback_data=f"kick_{user_id}")
@@ -126,8 +130,7 @@ def prompt_kick(message):
         message.chat.id,
         "Apakah Anda yakin ingin mengeluarkan anggota ini?",
         reply_markup=kick_button(member_id)
-)
-
+    )
 
 # Pesan perpisahan
 @bot.message_handler(content_types=["left_chat_member"])
@@ -175,7 +178,6 @@ def index():
     bot.remove_webhook()
     bot.set_webhook(url=f"https://bottelegram-two.vercel.app/{TOKEN}")
     return "Bot is running!", 200
-
 
 if __name__ == "__main__":
     app.run(debug=True)
