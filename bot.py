@@ -3,9 +3,52 @@ import re
 from flask import Flask, request
 from os import getenv
 from dotenv import load_dotenv
+import openai
+from telegram import Update
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
 
-load_dotenv()
+# Set API Key Telegram dan OpenAI
 TOKEN = getenv("TELEGRAM_API_TOKEN")
+TELEGRAM_API_TOKEN = getenv("TELEGRAM_API_TOKEN")
+OPENAI_API_KEY = getenv("TOKEN_OPENAI_KEY")
+
+# Inisialisasi OpenAI
+openai.api_key = OPENAI_API_KEY
+
+# Fungsi untuk menghubungkan OpenAI API
+def get_ai_response(user_message: str) -> str:
+    response = openai.Completion.create(
+        engine="text-davinci-003",  # Atau model GPT lain yang Anda inginkan
+        prompt=user_message,
+        max_tokens=150
+    )
+    return response.choices[0].text.strip()
+
+# Fungsi untuk menangani pesan masuk dari pengguna
+def respond_to_message(update: Update, context: CallbackContext) -> None:
+    user_message = update.message.text
+    ai_response = get_ai_response(user_message)
+    update.message.reply_text(ai_response)
+
+# Fungsi untuk start bot
+def start(update: Update, context: CallbackContext) -> None:
+    update.message.reply_text('Halo! Saya adalah bot AI. Tanyakan apa saja!')
+
+def main():
+    # Inisialisasi Updater dan Dispatcher
+    updater = Updater(TELEGRAM_API_TOKEN)
+    dispatcher = updater.dispatcher
+
+    # Menambahkan handler untuk command /start dan pesan masuk
+    dispatcher.add_handler(CommandHandler("start", start))
+    dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, respond_to_message))
+
+    # Mulai bot
+    updater.start_polling()
+    updater.idle()
+load_dotenv()
+
+
 bot = telebot.TeleBot(TOKEN)
 
 # Flask untuk Vercel
@@ -132,6 +175,10 @@ def index():
     bot.remove_webhook()
     bot.set_webhook(url=f"https://bottelegram-two.vercel.app/{TOKEN}")
     return "Bot is running!", 200
+
+
+if __name__=="__main__":
+    main()
 
 if __name__ == "__main__":
     app.run(debug=True)
