@@ -86,9 +86,6 @@ def prompt_kick(message):
 )
 
 
-@bot.message_handler(content_types=["text"])
-def auto_reply(message):
-    bot.reply_to(message, "Terima kasih, pesan Anda telah diterima!")
 # Pesan perpisahan
 @bot.message_handler(content_types=["left_chat_member"])
 def farewell_member(message):
