@@ -177,8 +177,5 @@ def index():
     return "Bot is running!", 200
 
 
-if __name__=="__main__":
-    main()
-
 if __name__ == "__main__":
     app.run(debug=True)
