@@ -11,7 +11,7 @@ from flask import Flask, request
 app = Flask(__name__)
 
 # Token Bot Telegram
-TOKEN = os.getenv('TELEGRAM_TOKEN')  # Masukkan token bot Anda ke variabel lingkungan
+TOKEN = "7829625950:AAHAkDANqB9yalb2vClpxX5zXBpHBaq_iVM"  # Masukkan token bot Anda ke variabel lingkungan
 
 # Fungsi untuk menangani perintah `/start`
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
