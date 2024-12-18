@@ -1,18 +1,18 @@
+import os
 import telebot
 import platform
-import os
 import uuid
 from flask import Flask, request
 from datetime import datetime, timedelta
 
-# Masukkan token Telegram langsung
-TOKEN = "7829625950:AAHAkDANqB9yalb2vClpxX5zXBpHBaq_iVM"  # Ganti dengan token Anda
+# Get token securely from environment variables
+TOKEN = "7829625950:AAHAkDANqB9yalb2vClpxX5zXBpHBaq_iVM"  # Set your token in the environment variables
 bot = telebot.TeleBot(TOKEN)
 
-# Flask untuk Vercel
+# Flask app for Vercel deployment
 app = Flask(__name__)
 
-# Dictionary untuk menyimpan lisensi
+# Dictionary to store licenses
 licenses = {}
 
 # Command /start
@@ -121,7 +121,7 @@ def set_expiry(message):
     except ValueError:
         bot.reply_to(message, "❌ Gunakan format: `/set_expiry <license_key> <hari>`", parse_mode="Markdown")
 
-# Endpoint validasi lisensi untuk script premium
+# Endpoint untuk validasi lisensi script premium
 @app.route("/validate_license", methods=["POST"])
 def validate_license():
     data = request.get_json()
@@ -144,7 +144,7 @@ def webhook():
     bot.process_new_updates([update])
     return "OK", 200
 
-# Homepage
+# Homepage untuk pengecekan status bot
 @app.route("/")
 def index():
     bot.remove_webhook()
