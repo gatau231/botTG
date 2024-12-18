@@ -54,11 +54,18 @@ async def webhook():
 def index():
     return 'Bot is running!'
 
+
+# Token dan URL webhook langsung ditentukan di sini
+WEBHOOK_URL = "https://bottelegram-beta.vercel.app/"  # Ganti dengan URL webhook Anda
+
 # Fungsi untuk mengatur webhook
 async def set_webhook():
-    webhook_url = os.getenv('WEBHOOK_URL') + TOKEN  # URL webhook
-    await app_telegram.bot.set_webhook(url=webhook_url)
-    print(f"Webhook berhasil diatur: {webhook_url}")
+    webhook_url = WEBHOOK_URL + TOKEN  # Gabungkan URL dasar dan token
+    try:
+        await app_telegram.bot.set_webhook(url=webhook_url)
+        print(f"Webhook berhasil diatur: {webhook_url}")
+    except Exception as e:
+        print(f"Gagal mengatur webhook: {e}")
 
 if __name__ == '__main__':
     # Atur webhook sebelum menjalankan Flask
