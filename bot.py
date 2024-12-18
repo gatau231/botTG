@@ -147,5 +147,5 @@ def webhook():
 @app.route("/")
 def index():
     bot.remove_webhook()
-    bot.set_webhook(url=f"https://bottelegram-five.vercel.app/{TOKEN}")
+    bot.set_webhook(url=f"https://bottelegram-beta.vercel.app/{TOKEN}")
     return "Bot is running!", 200
