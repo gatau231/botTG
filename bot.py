@@ -6,7 +6,7 @@ from flask import Flask, request
 from datetime import datetime, timedelta
 
 # Get token securely from environment variables
-TOKEN = "7829625950:AAHAkDANqB9yalb2vClpxX5zXBpHBaq_iVM"  # Set your token in the environment variables
+TOKEN = "7515695303:AAEGslztlvsceODJTmRdDoGhwy0RDJXP04M"  # Set your token in the environment variables
 bot = telebot.TeleBot(TOKEN)
 
 # Flask app for Vercel deployment
@@ -31,15 +31,9 @@ Bot ini digunakan untuk memverifikasi lisensi script Python Anda dan memberikan 
 4. Gunakan perintah `/set_expiry <license_key> <hari>` untuk mengubah tanggal kedaluwarsa lisensi (Admin saja).
 
 📞 *Informasi Kontak:*
-Nama: Fanky  
-Email: radenmanis123@gmail.com  
-Telepon: 0895359611122
-
-🌐 *Media Sosial:*
-- Website: [fankyxd.xyz](https://fankyxd.xyz)  
-- Instagram: [@fannjha](https://instagram.com/fannjha)  
-- GitHub: [fanky86](https://github.com/fanky86)  
-- Telegram: [@fankyxd](https://t.me/fankyxd)
+Nama: Idoy
+Email: doyuserbot@gmail.com  
+Telepon: 082294281179
 
 Selamat mencoba dan hubungi saya jika ada pertanyaan! 😊
 """
